@@ -1,25 +1,66 @@
-openapi: 3.0.3
+openapi: 3.0.0
 info:
-  title: JSONPlaceholder Complete API
-  version: 1.0.0
+  title: Library Management API
+  version: 1.1.0
+  description: API برای مدیریت کتابخانه با کاربران مختلف و قابلیت state management در frontend
+
 servers:
-  - url: https://jsonplaceholder.typicode.com
+  - url: http://localhost:3000/api
+    description: Local server
+
 paths:
+
+  /users/login:
+    post:
+      summary: ورود کاربر
+      description: کاربر با ایمیل و رمز عبور وارد می‌شود
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: ورود موفق
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  userId:
+                    type: string
+        '401':
+          description: نام کاربری یا رمز عبور اشتباه
+
   /users:
     get:
-      summary: Get all users
+      summary: دریافت لیست کاربران
       responses:
         '200':
-          description: List of users
+          description: لیست کاربران
           content:
             application/json:
-              example:
-                - id: 1
-                  name: Leanne Graham
-                  username: Bret
-                  email: Sincere@april.biz
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    email:
+                      type: string
     post:
-      summary: Create a new user
+      summary: اضافه کردن کاربر جدید
       requestBody:
         required: true
         content:
@@ -29,22 +70,23 @@ paths:
               properties:
                 name:
                   type: string
-                username:
-                  type: string
                 email:
+                  type: string
+                password:
                   type: string
       responses:
         '201':
-          description: Created user
-          content:
-            application/json:
-              example:
-                id: 11
-                name: John Doe
-                username: johnd
-                email: john@example.com
+          description: کاربر اضافه شد
+
+  /users/{userId}:
     put:
-      summary: Update a user
+      summary: ویرایش اطلاعات کاربر
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -54,45 +96,48 @@ paths:
               properties:
                 name:
                   type: string
-                username:
-                  type: string
                 email:
                   type: string
       responses:
         '200':
-          description: Updated user
-          content:
-            application/json:
-              example:
-                id: 1
-                name: Updated Name
-                username: UpdatedUsername
-                email: updated@example.com
-    delete:
-      summary: Delete a user
-      responses:
-        '200':
-          description: User deleted
-          content:
-            application/json:
-              example:
-                message: User deleted successfully
+          description: اطلاعات کاربر ویرایش شد
 
-  /posts:
-    get:
-      summary: Get all posts
+    delete:
+      summary: حذف کاربر
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
       responses:
         '200':
-          description: List of posts
+          description: کاربر حذف شد
+
+  /books:
+    get:
+      summary: لیست کتاب‌ها
+      responses:
+        '200':
+          description: همه کتاب‌ها
           content:
             application/json:
-              example:
-                - id: 1
-                  userId: 1
-                  title: sunt aut facere repellat provident occaecati
-                  body: quia et suscipit...
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    title:
+                      type: string
+                    author:
+                      type: string
+                    available:
+                      type: boolean
+
     post:
-      summary: Create a new post
+      summary: اضافه کردن کتاب جدید
       requestBody:
         required: true
         content:
@@ -100,24 +145,23 @@ paths:
             schema:
               type: object
               properties:
-                userId:
-                  type: integer
                 title:
                   type: string
-                body:
+                author:
                   type: string
       responses:
         '201':
-          description: Created post
-          content:
-            application/json:
-              example:
-                id: 101
-                userId: 1
-                title: New Post
-                body: This is a new post
+          description: کتاب اضافه شد
+
+  /books/{bookId}:
     put:
-      summary: Update a post
+      summary: ویرایش اطلاعات کتاب
+      parameters:
+        - in: path
+          name: bookId
+          required: true
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -125,48 +169,35 @@ paths:
             schema:
               type: object
               properties:
-                userId:
-                  type: integer
                 title:
                   type: string
-                body:
+                author:
                   type: string
       responses:
         '200':
-          description: Updated post
-          content:
-            application/json:
-              example:
-                id: 1
-                userId: 1
-                title: Updated Post
-                body: Updated body
-    delete:
-      summary: Delete a post
-      responses:
-        '200':
-          description: Post deleted
-          content:
-            application/json:
-              example:
-                message: Post deleted successfully
+          description: اطلاعات کتاب ویرایش شد
 
-  /comments:
-    get:
-      summary: Get all comments
+    delete:
+      summary: حذف کتاب
+      parameters:
+        - in: path
+          name: bookId
+          required: true
+          schema:
+            type: string
       responses:
         '200':
-          description: List of comments
-          content:
-            application/json:
-              example:
-                - id: 1
-                  postId: 1
-                  name: id labore ex et quam laborum
-                  email: Eliseo@gardner.biz
-                  body: laudantium enim quasi est quidem magnam voluptate
+          description: کتاب حذف شد
+
+  /books/{bookId}/borrow:
     post:
-      summary: Create a new comment
+      summary: قرض گرفتن کتاب
+      parameters:
+        - in: path
+          name: bookId
+          required: true
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -174,78 +205,23 @@ paths:
             schema:
               type: object
               properties:
-                postId:
-                  type: integer
-                name:
-                  type: string
-                email:
-                  type: string
-                body:
-                  type: string
-      responses:
-        '201':
-          description: Created comment
-          content:
-            application/json:
-              example:
-                id: 501
-                postId: 1
-                name: New Comment
-                email: new@example.com
-                body: This is a comment
-    put:
-      summary: Update a comment
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                postId:
-                  type: integer
-                name:
-                  type: string
-                email:
-                  type: string
-                body:
+                userId:
                   type: string
       responses:
         '200':
-          description: Updated comment
-          content:
-            application/json:
-              example:
-                id: 1
-                postId: 1
-                name: Updated Comment
-                email: updated@example.com
-                body: Updated body
-    delete:
-      summary: Delete a comment
-      responses:
-        '200':
-          description: Comment deleted
-          content:
-            application/json:
-              example:
-                message: Comment deleted successfully
+          description: کتاب قرض گرفته شد
+        '400':
+          description: کتاب در دسترس نیست
 
-  /todos:
-    get:
-      summary: Get all todos
-      responses:
-        '200':
-          description: List of todos
-          content:
-            application/json:
-              example:
-                - id: 1
-                  userId: 1
-                  title: delectus aut autem
-                  completed: false
+  /books/{bookId}/return:
     post:
-      summary: Create a new todo
+      summary: پس دادن کتاب
+      parameters:
+        - in: path
+          name: bookId
+          required: true
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -254,199 +230,16 @@ paths:
               type: object
               properties:
                 userId:
-                  type: integer
-                title:
                   type: string
-                completed:
-                  type: boolean
-      responses:
-        '201':
-          description: Created todo
-          content:
-            application/json:
-              example:
-                id: 201
-                userId: 1
-                title: New Task
-                completed: false
-    put:
-      summary: Update a todo
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                userId:
-                  type: integer
-                title:
-                  type: string
-                completed:
-                  type: boolean
       responses:
         '200':
-          description: Updated todo
-          content:
-            application/json:
-              example:
-                id: 1
-                userId: 1
-                title: Updated Task
-                completed: true
-    delete:
-      summary: Delete a todo
-      responses:
-        '200':
-          description: Todo deleted
-          content:
-            application/json:
-              example:
-                message: Todo deleted successfully
+          description: کتاب بازگشت داده شد
+        '400':
+          description: خطا در بازگشت کتاب
 
-  /albums:
-    get:
-      summary: Get all albums
-      responses:
-        '200':
-          description: List of albums
-          content:
-            application/json:
-              example:
-                - id: 1
-                  userId: 1
-                  title: quod aut
-    post:
-      summary: Create a new album
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                userId:
-                  type: integer
-                title:
-                  type: string
-      responses:
-        '201':
-          description: Created album
-          content:
-            application/json:
-              example:
-                id: 101
-                userId: 1
-                title: New Album
-    put:
-      summary: Update an album
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                userId:
-                  type: integer
-                title:
-                  type: string
-      responses:
-        '200':
-          description: Updated album
-          content:
-            application/json:
-              example:
-                id: 1
-                userId: 1
-                title: Updated Album
-    delete:
-      summary: Delete an album
-      responses:
-        '200':
-          description: Album deleted
-          content:
-            application/json:
-              example:
-                message: Album deleted successfully
-
-  /photos:
-    get:
-      summary: Get all photos
-      responses:
-        '200':
-          description: List of photos
-          content:
-            application/json:
-              example:
-                - id: 1
-                  albumId: 1
-                  title: accusamus beatae ad facilis cum similique qui sunt
-                  url: https://via.placeholder.com/600/92c952
-                  thumbnailUrl: https://via.placeholder.com/150/92c952
-    post:
-      summary: Create a new photo
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                albumId:
-                  type: integer
-                title:
-                  type: string
-                url:
-                  type: string
-                thumbnailUrl:
-                  type: string
-      responses:
-        '201':
-          description: Created photo
-          content:
-            application/json:
-              example:
-                id: 501
-                albumId: 1
-                title: New Photo
-                url: https://via.placeholder.com/600/abcd
-                thumbnailUrl: https://via.placeholder.com/150/abcd
-    put:
-      summary: Update a photo
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                albumId:
-                  type: integer
-                title:
-                  type: string
-                url:
-                  type: string
-                thumbnailUrl:
-                  type: string
-      responses:
-        '200':
-          description: Updated photo
-          content:
-            application/json:
-              example:
-                id: 1
-                albumId: 1
-                title: Updated Photo
-                url: https://via.placeholder.com/600/updated
-                thumbnailUrl: https://via.placeholder.com/150/updated
-    delete:
-      summary: Delete a photo
-      responses:
-        '200':
-          description: Photo deleted
-          content:
-            application/json:
-              example:
-                message: Photo deleted successfully
-
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
