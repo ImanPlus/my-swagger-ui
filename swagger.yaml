@@ -1,8 +1,8 @@
 openapi: 3.0.0
 info:
   title: Library Management API
-  version: 1.3.0
-  description: API مدیریت کتابخانه با کاربران و کتاب‌های نمونه برای تست و نمایش در Swagger UI
+  version: 1.3.1
+  description: API مدیریت کتابخانه با کاربران و کتاب‌های نمونه برای تست و نمایش در Swagger UI (10 مورد نمونه در هر لیست)
 
 servers:
   - url: http://localhost:3000/api
@@ -41,7 +41,7 @@ paths:
                   userId:
                     type: string
               example:
-                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.sampletoken..."
                 userId: "1"
         '401':
           description: نام کاربری یا رمز عبور اشتباه
@@ -49,6 +49,7 @@ paths:
   /users:
     get:
       summary: دریافت لیست کاربران
+      description: مشاهده کاربران موجود (نیاز به لاگین دارد)
       security:
         - BearerAuth: []
       responses:
@@ -74,6 +75,30 @@ paths:
                 - id: "2"
                   name: "زهرا"
                   email: "zahra@example.com"
+                - id: "3"
+                  name: "مهدی"
+                  email: "mehdi@example.com"
+                - id: "4"
+                  name: "نرگس"
+                  email: "narges@example.com"
+                - id: "5"
+                  name: "حسین"
+                  email: "hossein@example.com"
+                - id: "6"
+                  name: "سارا"
+                  email: "sara@example.com"
+                - id: "7"
+                  name: "رضا"
+                  email: "reza@example.com"
+                - id: "8"
+                  name: "فاطمه"
+                  email: "fatemeh@example.com"
+                - id: "9"
+                  name: "امیر"
+                  email: "amir@example.com"
+                - id: "10"
+                  name: "لیلا"
+                  email: "leila@example.com"
 
     post:
       summary: اضافه کردن کاربر جدید
@@ -91,8 +116,8 @@ paths:
                 password:
                   type: string
               example:
-                name: "مهدی"
-                email: "mehdi@example.com"
+                name: "حسن"
+                email: "hasan@example.com"
                 password: "secret"
       responses:
         '201':
@@ -109,9 +134,9 @@ paths:
                   email:
                     type: string
               example:
-                id: "3"
-                name: "مهدی"
-                email: "mehdi@example.com"
+                id: "11"
+                name: "حسن"
+                email: "hasan@example.com"
 
   /users/{userId}:
     put:
@@ -210,6 +235,38 @@ paths:
                   title: "کتاب فیزیک"
                   author: "زهرا"
                   available: false
+                - id: "b3"
+                  title: "کتاب شیمی"
+                  author: "سارا"
+                  available: true
+                - id: "b4"
+                  title: "داستان کوتاه"
+                  author: "رضا"
+                  available: true
+                - id: "b5"
+                  title: "تاریخ ایران"
+                  author: "فاطمه"
+                  available: false
+                - id: "b6"
+                  title: "برنامه‌نویسی جاوااسکریپت"
+                  author: "امیر"
+                  available: true
+                - id: "b7"
+                  title: "اقتصاد کلان"
+                  author: "حسن"
+                  available: true
+                - id: "b8"
+                  title: "زبان انگلیسی سطح یک"
+                  author: "لیلا"
+                  available: false
+                - id: "b9"
+                  title: "فلسفه معاصر"
+                  author: "نرگس"
+                  available: true
+                - id: "b10"
+                  title: "هنر و طراحی"
+                  author: "مهدی"
+                  available: true
 
     post:
       summary: اضافه کردن کتاب جدید
@@ -227,8 +284,8 @@ paths:
                 author:
                   type: string
               example:
-                title: "کتاب شیمی"
-                author: "سارا"
+                title: "کتاب جدید تست"
+                author: "نویسنده تست"
       responses:
         '201':
           description: کتاب اضافه شد
@@ -246,9 +303,9 @@ paths:
                   available:
                     type: boolean
               example:
-                id: "b3"
-                title: "کتاب شیمی"
-                author: "سارا"
+                id: "b11"
+                title: "کتاب جدید تست"
+                author: "نویسنده تست"
                 available: true
 
   /books/{bookId}:
