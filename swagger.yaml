@@ -1,8 +1,8 @@
 openapi: 3.0.0
 info:
   title: Library Management API
-  version: 1.1.0
-  description: API برای مدیریت کتابخانه با کاربران مختلف و قابلیت state management در frontend
+  version: 1.3.0
+  description: API مدیریت کتابخانه با کاربران و کتاب‌های نمونه برای تست و نمایش در Swagger UI
 
 servers:
   - url: http://localhost:3000/api
@@ -25,6 +25,9 @@ paths:
                   type: string
                 password:
                   type: string
+              example:
+                email: admin@example.com
+                password: password123
       responses:
         '200':
           description: ورود موفق
@@ -37,12 +40,17 @@ paths:
                     type: string
                   userId:
                     type: string
+              example:
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                userId: "1"
         '401':
           description: نام کاربری یا رمز عبور اشتباه
 
   /users:
     get:
       summary: دریافت لیست کاربران
+      security:
+        - BearerAuth: []
       responses:
         '200':
           description: لیست کاربران
@@ -59,6 +67,14 @@ paths:
                       type: string
                     email:
                       type: string
+              example:
+                - id: "1"
+                  name: "علی"
+                  email: "ali@example.com"
+                - id: "2"
+                  name: "زهرا"
+                  email: "zahra@example.com"
+
     post:
       summary: اضافه کردن کاربر جدید
       requestBody:
@@ -74,13 +90,34 @@ paths:
                   type: string
                 password:
                   type: string
+              example:
+                name: "مهدی"
+                email: "mehdi@example.com"
+                password: "secret"
       responses:
         '201':
           description: کاربر اضافه شد
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  email:
+                    type: string
+              example:
+                id: "3"
+                name: "مهدی"
+                email: "mehdi@example.com"
 
   /users/{userId}:
     put:
       summary: ویرایش اطلاعات کاربر
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: userId
@@ -98,12 +135,32 @@ paths:
                   type: string
                 email:
                   type: string
+              example:
+                name: "علی تغییر یافته"
+                email: "ali.new@example.com"
       responses:
         '200':
           description: اطلاعات کاربر ویرایش شد
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  email:
+                    type: string
+              example:
+                id: "1"
+                name: "علی تغییر یافته"
+                email: "ali.new@example.com"
 
     delete:
       summary: حذف کاربر
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: userId
@@ -113,6 +170,15 @@ paths:
       responses:
         '200':
           description: کاربر حذف شد
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "کاربر با موفقیت حذف شد"
 
   /books:
     get:
@@ -135,9 +201,20 @@ paths:
                       type: string
                     available:
                       type: boolean
+              example:
+                - id: "b1"
+                  title: "کتاب ریاضی"
+                  author: "محمد"
+                  available: true
+                - id: "b2"
+                  title: "کتاب فیزیک"
+                  author: "زهرا"
+                  available: false
 
     post:
       summary: اضافه کردن کتاب جدید
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -149,13 +226,36 @@ paths:
                   type: string
                 author:
                   type: string
+              example:
+                title: "کتاب شیمی"
+                author: "سارا"
       responses:
         '201':
           description: کتاب اضافه شد
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  title:
+                    type: string
+                  author:
+                    type: string
+                  available:
+                    type: boolean
+              example:
+                id: "b3"
+                title: "کتاب شیمی"
+                author: "سارا"
+                available: true
 
   /books/{bookId}:
     put:
       summary: ویرایش اطلاعات کتاب
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: bookId
@@ -173,12 +273,35 @@ paths:
                   type: string
                 author:
                   type: string
+              example:
+                title: "کتاب ریاضی پیشرفته"
+                author: "محمد جدید"
       responses:
         '200':
           description: اطلاعات کتاب ویرایش شد
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  title:
+                    type: string
+                  author:
+                    type: string
+                  available:
+                    type: boolean
+              example:
+                id: "b1"
+                title: "کتاب ریاضی پیشرفته"
+                author: "محمد جدید"
+                available: true
 
     delete:
       summary: حذف کتاب
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: bookId
@@ -188,6 +311,15 @@ paths:
       responses:
         '200':
           description: کتاب حذف شد
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "کتاب با موفقیت حذف شد"
 
   /books/{bookId}/borrow:
     post:
@@ -207,9 +339,20 @@ paths:
               properties:
                 userId:
                   type: string
+              example:
+                userId: "1"
       responses:
         '200':
           description: کتاب قرض گرفته شد
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "کتاب با موفقیت قرض گرفته شد"
         '400':
           description: کتاب در دسترس نیست
 
@@ -231,9 +374,20 @@ paths:
               properties:
                 userId:
                   type: string
+              example:
+                userId: "1"
       responses:
         '200':
           description: کتاب بازگشت داده شد
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "کتاب با موفقیت بازگشت داده شد"
         '400':
           description: خطا در بازگشت کتاب
 
