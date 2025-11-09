@@ -13,7 +13,7 @@ info:
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
-  
+
 servers:
   - url: http://localhost:3000/api
     description: سرور توسعه محلی
@@ -38,6 +38,7 @@ paths:
                 properties:
                   quote_of_the_day:
                     type: string
+                    description: نقل قول روز.
                   news_sources:
                     type: array
                     items:
@@ -64,7 +65,7 @@ paths:
 
   /users/login:
     post:
-      summary: ورود کاربر
+      summary: ورود کاربر و دریافت توکن JWT
       tags: [Users]
       requestBody:
         required: true
@@ -77,7 +78,7 @@ paths:
               password: "testpass123"
       responses:
         '200':
-          description: ورود موفق و دریافت توکن JWT
+          description: ورود موفق، شامل توکن JWT برای احراز هویت
           content:
             application/json:
               schema:
@@ -85,24 +86,13 @@ paths:
                 properties:
                   token:
                     type: string
-                    description: JWT token for secure API access
+                    description: توکن JWT برای استفاده در هدر Authorization درخواست‌های بعدی
                   user_id:
                     type: string
-                    format: uuid
-                    description: شناسه کاربر وارد شده
-                  email:
-                    type: string
-                    format: email
-                    description: ایمیل کاربر
-                  role:
-                    type: string
-                    enum: [student, staff]
-                    description: نقش کاربر وارد شده
+                    description: شناسه کاربر
               example:
                 token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                user_id: "1f3a9f0c-82a3-42fb-bb36-3e55c715e5b3"
-                email: "staff@test.com"
-                role: "staff"
+                user_id: "123e4567-e89b-12d3-a456-426614174000"
         '401':
           description: نام کاربری یا رمز عبور اشتباه.
 
@@ -119,6 +109,7 @@ paths:
   /users:
     get:
       summary: دریافت لیست کاربران (فقط پس از ورود) 🔐
+      description: بازیابی لیست تمام کاربران. نیاز به **توکن احراز هویت (Bearer Token)** دارد.
       tags: [Users]
       security:
         - BearerAuth: []
@@ -142,6 +133,8 @@ paths:
         schema:
           type: string
           format: uuid
+        description: شناسه منحصر به فرد کاربر
+        
     get:
       summary: دریافت اطلاعات کاربر خاص
       tags: [Users]
@@ -211,7 +204,7 @@ paths:
           type: string
           format: uuid
     get:
-      summary: دریافت لیست پرداخت‌های کاربر
+      summary: دریافت لیست پرداخت‌های کاربر (Pending/Success)
       tags: [Payments]
       security:
         - BearerAuth: []
@@ -224,7 +217,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Payment'
-  
+
   /payments/initiate:
     post:
       summary: شروع فرآیند پرداخت (مانند پرداخت جریمه)
@@ -245,15 +238,17 @@ paths:
                 payment_id:
                   type: string
                   format: uuid
+                  description: شناسه پرداختی که قرار است انجام شود (برای پیگیری جریمه).
                 card_details:
                   type: object
+                  description: جزئیات کارت پرداخت (برای شبیه‌سازی)
                   properties:
                     card_number:
                       type: string
                     expiry:
-                      type: string
+                        type: string
                     cvv:
-                      type: string
+                        type: string
       responses:
         '200':
           description: پرداخت موفقیت آمیز بود.
@@ -312,26 +307,31 @@ paths:
   /books:
     get:
       summary: دریافت لیست کتاب‌ها (با جستجوی پیشرفته)
+      description: بازیابی لیست تمام کتاب‌ها، با پشتیبانی از پارامترهای جستجوی پیشرفته.
       tags: [Books]
       parameters:
         - in: query
           name: q
           schema:
             type: string
+          description: عبارت جستجوی متنی.
         - in: query
           name: search_by
           schema:
             type: string
             enum: [Title, Author, Text, Subjects]
             default: Title
+          description: فیلد مورد نظر برای جستجو (Title, Author, Text, Subjects).
         - in: query
           name: category
           schema:
             type: string
+          description: فیلتر بر اساس دسته/ژانر
         - in: query
           name: language
           schema:
             type: string
+          description: فیلتر بر اساس زبان
         - in: query
           name: limit
           schema:
@@ -377,8 +377,10 @@ paths:
         schema:
           type: string
           format: uuid
+        description: شناسه منحصر به فرد کتاب
+        
     get:
-      summary: دریافت جزئیات کتاب
+      summary: دریافت جزئیات کتاب (Book Preview)
       tags: [Books]
       responses:
         '200':
@@ -389,3 +391,451 @@ paths:
                 $ref: '#/components/schemas/Book'
         '404':
           description: کتاب پیدا نشد.
+
+    put:
+      summary: ویرایش اطلاعات کتاب
+      tags: [Books]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+      responses:
+        '200':
+          description: اطلاعات کتاب ویرایش شد.
+
+    delete:
+      summary: حذف کتاب
+      tags: [Books]
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: کتاب با موفقیت حذف شد.
+
+  /books/{bookId}/content:
+    parameters:
+      - in: path
+        name: bookId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: دریافت آدرس‌های محتوای E-book و Audio (Read Now / Listen)
+      tags: [Content]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: جزئیات دسترسی به محتوا
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookContent'
+        '403':
+          description: کاربر این کتاب را امانت نگرفته است.
+
+  /books/{bookId}/notes:
+    parameters:
+      - in: path
+        name: bookId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: دریافت لیست یادداشت‌های کاربر برای این کتاب
+      tags: [Content]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: لیست یادداشت‌ها
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Note'
+    post:
+      summary: ذخیره یادداشت جدید
+      tags: [Content]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                page_number:
+                  type: integer
+                note_text:
+                  type: string
+              required: [user_id, page_number, note_text]
+      responses:
+        '201':
+          description: یادداشت با موفقیت ذخیره شد.
+
+  /books/{bookId}/borrow:
+    parameters:
+      - in: path
+        name: bookId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: شناسه منحصر به فرد کتاب
+    post:
+      summary: امانت گرفتن کتاب (Borrow)
+      tags: [Borrow]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, book_serial_number]
+              properties:
+                user_id:
+                  type: string
+                  format: uuid
+                  description: شناسه کاربر امانت گیرنده
+                book_serial_number:
+                  type: string
+                  description: شماره سریال نسخه فیزیکی کتاب.
+                due_date:
+                  type: string
+                  format: date
+                  description: تاریخ بازگشت مورد انتظار (اختیاری)
+                purpose:
+                  type: string
+                  description: هدف امانت گرفتن کتاب (اختیاری)
+      responses:
+        '201':
+          description: کتاب با موفقیت امانت گرفته شد.
+        '400':
+          description: کتاب موجود نیست یا کاربر محدودیت دارد.
+
+  /books/{bookId}/return:
+    parameters:
+      - in: path
+        name: bookId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: شناسه منحصر به فرد کتاب
+    post:
+      summary: بازگرداندن کتاب (My Shelf Return)
+      tags: [Borrow]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, book_serial_number]
+              properties:
+                user_id:
+                  type: string
+                  format: uuid
+                  description: شناسه کاربر
+                book_serial_number:
+                  type: string
+                  description: شماره سریال کتاب بازگردانده شده.
+                fine_paid:
+                  type: boolean
+                  description: آیا جریمه (در صورت وجود) پرداخت شده است؟
+      responses:
+        '200':
+          description: کتاب با موفقیت بازگردانده شد.
+        '400':
+          description: خطای بازگشت.
+
+  # ----------------------------------------------------
+  # CONTRIBUTE PATHS
+  # ----------------------------------------------------
+  /contribute:
+    post:
+      summary: ارسال کتاب یا محتوای پیشنهادی جدید برای بررسی
+      tags: [Contribute]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                author:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+              required: [title, author, file]
+      responses:
+        '202':
+          description: مشارکت با موفقیت ارسال و در صف بررسی قرار گرفت.
+
+  /contribute/submissions:
+    get:
+      summary: دریافت لیست مشارکت‌های ارسالی کاربر
+      tags: [Contribute]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: لیست مشارکت‌ها
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    submission_id:
+                      type: string
+                    status:
+                      type: string
+                      enum: [Pending, Approved, Rejected]
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          description: شناسه منحصر به فرد کاربر
+        reg_number:
+          type: string
+          description: شماره ثبت کالج یا شناسه پرسنلی.
+        email:
+          type: string
+          format: email
+          description: ایمیل کالج یا سازمانی.
+        role:
+          type: string
+          enum: ["student", "staff"]
+          description: نقش کاربر در سیستم.
+        is_active:
+          type: boolean
+          description: وضعیت فعال بودن حساب کاربری.
+        readings_count:
+          type: integer
+          description: تعداد کل کتاب‌های خوانده شده توسط کاربر.
+        contribution_count:
+          type: integer
+          description: تعداد مشارکت‌های کاربر.
+        phone_number:
+          type: string
+          description: شماره تلفن کاربر.
+
+    UserRegistration:
+      type: object
+      required: [reg_number, email, password, confirm_password]
+      properties:
+        reg_number:
+          type: string
+          description: شماره ثبت کالج یا شناسه پرسنلی.
+        email:
+          type: string
+          format: email
+          description: ایمیل کالج یا سازمانی.
+        password:
+          type: string
+          format: password
+          description: رمز عبور جدید.
+        confirm_password:
+          type: string
+          format: password
+          description: تکرار رمز عبور برای تایید.
+
+    UserLogin:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      example:
+        email: "staff@test.com"
+        password: "testpass123"
+
+    UserUpdate:
+      type: object
+      properties:
+        reg_number:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    Book:
+      type: object
+      properties:
+        book_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        author:
+          type: string
+        isbn:
+          type: string
+        description:
+          type: string
+        language:
+          type: string
+        page_count:
+          type: integer
+        categories:
+          type: array
+          items:
+            type: string
+        cover_url:
+          type: string
+          format: url
+        avg_rating:
+          type: number
+          format: float
+        publication_year:
+          type: integer
+        is_available:
+          type: boolean
+        stock_status:
+          type: string
+          enum: [In-Shelf, Borrowed, E-book-Only]
+
+    BorrowRecord:
+      type: object
+      properties:
+        shelf_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        book_id:
+          type: string
+          format: uuid
+        book_serial_number:
+          type: string
+        purpose:
+          type: string
+        borrow_date:
+          type: string
+          format: date
+        due_date:
+          type: string
+          format: date
+        is_returned:
+          type: boolean
+        last_read_page:
+          type: integer
+
+    Payment:
+      type: object
+      properties:
+        payment_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        book_title:
+          type: string
+        book_format:
+          type: string
+          enum: [Hard Copy, E-Book, Audio book]
+        usage_days:
+          type: string
+        penalty_amount:
+          type: number
+          format: float
+        currency:
+          type: string
+          example: "IRR"
+        payment_status:
+          type: string
+          enum: [Pending, Success, Failed, Cancelled]
+        reason:
+          type: string
+        payment_date:
+          type: string
+          format: date
+
+    BookContent:
+      type: object
+      properties:
+        book_id:
+          type: string
+          format: uuid
+        e_book_url:
+          type: string
+          format: url
+        audio_book_url:
+          type: string
+          format: url
+        hard_copy_available:
+          type: boolean
+
+    Note:
+      type: object
+      properties:
+        note_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        book_id:
+          type: string
+          format: uuid
+        page_number:
+          type: integer
+        note_text:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    NewsSource:
+      type: object
+      properties:
+        name:
+          type: string
+        logo_url:
+          type: string
+          format: url
+        link_url:
+          type: string
+          format: url
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
