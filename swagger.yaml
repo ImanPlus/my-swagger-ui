@@ -1,33 +1,81 @@
 openapi: 3.0.0
 info:
-  title: Library Management API
-  version: 1.3.1
-  description: API مدیریت کتابخانه با کاربران و کتاب‌های نمونه برای تست و نمایش در Swagger UI (10 مورد نمونه در هر لیست)
-
+  title: My Book Shelf API - Final Complete Definition
+  version: 3.0.0 # نسخه نهایی بر اساس تمام فلوهای کاربری
+  description: |
+    API جامع مدیریت کتابخانه (My Book Shelf).
+    شامل مدیریت کاربران، کتاب‌ها، امانات، قفسه شخصی، پرداخت‌ها و محتوای مطالعه.
+    اعتبارنامه‌ی آزمایشی پیش‌فرض برای لاگین: email: staff@test.com / password: testpass123
+  contact:
+    name: My Book Shelf Team
+    url: https://example.com/project-url
+    email: contact@example.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  
 servers:
   - url: http://localhost:3000/api
-    description: Local server
+    description: سرور توسعه محلی
 
 paths:
+  # ----------------------------------------------------
+  # HOME PATHS
+  # ----------------------------------------------------
+  /home/dynamic-data:
+    get:
+      summary: دریافت محتوای پویا صفحه اصلی (Quote و News)
+      tags: [Home]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: اطلاعات صفحه اصلی شامل نقل قول روز و اخبار.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quote_of_the_day:
+                    type: string
+                    description: نقل قول روز.
+                  news_sources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NewsSource' # لیست منابع خبری.
 
-  /users/login:
+  # ----------------------------------------------------
+  # USERS & PROFILE PATHS
+  # ----------------------------------------------------
+  /users/register:
     post:
-      summary: ورود کاربر
-      description: کاربر با ایمیل و رمز عبور وارد می‌شود
+      summary: ثبت نام کاربر جدید
+      tags: [Users]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                password:
-                  type: string
-              example:
-                email: admin@example.com
-                password: password123
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '201':
+          description: کاربر با موفقیت ثبت نام شد.
+        '400':
+          description: اطلاعات نامعتبر.
+
+  /users/login:
+    post:
+      summary: ورود کاربر
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+            example:
+              email: "staff@test.com"
+              password: "testpass123"
       responses:
         '200':
           description: ورود موفق
@@ -38,18 +86,26 @@ paths:
                 properties:
                   token:
                     type: string
-                  userId:
+                  user_id:
                     type: string
-              example:
-                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.sampletoken..."
-                userId: "1"
         '401':
-          description: نام کاربری یا رمز عبور اشتباه
+          description: نام کاربری یا رمز عبور اشتباه.
+
+  /users/logout:
+    post:
+      summary: خروج از سیستم و باطل کردن توکن
+      tags: [Users]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: خروج موفق، توکن باطل شد.
 
   /users:
     get:
-      summary: دریافت لیست کاربران
-      description: مشاهده کاربران موجود (نیاز به لاگین دارد)
+      summary: دریافت لیست کاربران (فقط پس از ورود) 🔐
+      description: بازیابی لیست تمام کاربران. نیاز به **توکن احراز هویت (Bearer Token)** دارد.
+      tags: [Users]
       security:
         - BearerAuth: []
       responses:
@@ -60,157 +116,488 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                    name:
-                      type: string
-                    email:
-                      type: string
-              example:
-                - id: "1"
-                  name: "علی"
-                  email: "ali@example.com"
-                - id: "2"
-                  name: "زهرا"
-                  email: "zahra@example.com"
-                - id: "3"
-                  name: "مهدی"
-                  email: "mehdi@example.com"
-                - id: "4"
-                  name: "نرگس"
-                  email: "narges@example.com"
-                - id: "5"
-                  name: "حسین"
-                  email: "hossein@example.com"
-                - id: "6"
-                  name: "سارا"
-                  email: "sara@example.com"
-                - id: "7"
-                  name: "رضا"
-                  email: "reza@example.com"
-                - id: "8"
-                  name: "فاطمه"
-                  email: "fatemeh@example.com"
-                - id: "9"
-                  name: "امیر"
-                  email: "amir@example.com"
-                - id: "10"
-                  name: "لیلا"
-                  email: "leila@example.com"
-
-    post:
-      summary: اضافه کردن کاربر جدید
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                email:
-                  type: string
-                password:
-                  type: string
-              example:
-                name: "حسن"
-                email: "hasan@example.com"
-                password: "secret"
-      responses:
-        '201':
-          description: کاربر اضافه شد
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  name:
-                    type: string
-                  email:
-                    type: string
-              example:
-                id: "11"
-                name: "حسن"
-                email: "hasan@example.com"
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: نیاز به احراز هویت.
 
   /users/{userId}:
-    put:
-      summary: ویرایش اطلاعات کاربر
+    parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: شناسه منحصر به فرد کاربر
+        
+    get:
+      summary: دریافت اطلاعات کاربر خاص
+      tags: [Users]
       security:
         - BearerAuth: []
-      parameters:
-        - in: path
-          name: userId
-          required: true
-          schema:
-            type: string
+      responses:
+        '200':
+          description: اطلاعات کاربر بازیابی شد.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: کاربر پیدا نشد.
+
+    put:
+      summary: ویرایش اطلاعات کاربر
+      tags: [Users]
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                email:
-                  type: string
-              example:
-                name: "علی تغییر یافته"
-                email: "ali.new@example.com"
+              $ref: '#/components/schemas/UserUpdate'
       responses:
         '200':
-          description: اطلاعات کاربر ویرایش شد
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  name:
-                    type: string
-                  email:
-                    type: string
-              example:
-                id: "1"
-                name: "علی تغییر یافته"
-                email: "ali.new@example.com"
+          description: اطلاعات کاربر ویرایش شد.
 
     delete:
       summary: حذف کاربر
+      tags: [Users]
       security:
         - BearerAuth: []
-      parameters:
-        - in: path
-          name: userId
-          required: true
-          schema:
-            type: string
+      responses:
+        '204':
+          description: کاربر با موفقیت حذف شد.
+
+  /users/{userId}/profile:
+    parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: دریافت اطلاعات کامل پروفایل کاربر (Profile Menu)
+      tags: [Users]
+      security:
+        - BearerAuth: []
       responses:
         '200':
-          description: کاربر حذف شد
+          description: اطلاعات پروفایل بازیابی شد.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-              example:
-                message: "کاربر با موفقیت حذف شد"
+                $ref: '#/components/schemas/User'
 
-  /books:
+  /users/{userId}/payments:
+    parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+          format: uuid
     get:
-      summary: لیست کتاب‌ها
+      summary: دریافت لیست پرداخت‌های کاربر (Pending/Success)
+      tags: [Payments]
+      security:
+        - BearerAuth: []
       responses:
         '200':
-          description: همه کتاب‌ها
+          description: لیست پرداخت‌ها
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payment'
+  
+  /payments/initiate:
+    post:
+      summary: شروع فرآیند پرداخت (مانند پرداخت جریمه)
+      tags: [Payments]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, payment_id, card_details]
+              properties:
+                user_id:
+                  type: string
+                  format: uuid
+                payment_id:
+                  type: string
+                  format: uuid
+                  description: شناسه پرداختی که قرار است انجام شود (برای پیگیری جریمه).
+                card_details:
+                  type: object
+                  description: جزئیات کارت پرداخت (برای شبیه‌سازی)
+                  properties:
+                    card_number:
+                      type: string
+                    expiry:
+                        type: string
+                    cvv:
+                        type: string
+      responses:
+        '200':
+          description: پرداخت موفقیت آمیز بود.
+        '400':
+          description: اطلاعات پرداخت نامعتبر یا خطا در بانک.
+
+
+  /users/{userId}/shelf:
+    parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: دریافت قفسه من (کتاب‌های امانتی)
+      tags: [MyShelf]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: لیست کتاب‌های امانت گرفته شده.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BorrowRecord'
+
+  /users/{userId}/favourites:
+    parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: دریافت لیست کتاب‌های مورد علاقه
+      tags: [MyShelf]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: لیست کتاب‌های مورد علاقه کاربر.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+
+  # ----------------------------------------------------
+  # BOOKS & BORROW PATHS
+  # ----------------------------------------------------
+  /books:
+    get:
+      summary: دریافت لیست کتاب‌ها (با جستجوی پیشرفته)
+      description: بازیابی لیست تمام کتاب‌ها، با پشتیبانی از پارامترهای جستجوی پیشرفته.
+      tags: [Books]
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: عبارت جستجوی متنی.
+        - in: query
+          name: search_by
+          schema:
+            type: string
+            enum: [Title, Author, Text, Subjects]
+            default: Title
+          description: فیلد مورد نظر برای جستجو (Title, Author, Text, Subjects).
+        - in: query
+          name: category
+          schema:
+            type: string
+          description: فیلتر بر اساس دسته/ژانر
+        - in: query
+          name: language
+          schema:
+            type: string
+          description: فیلتر بر اساس زبان
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: لیست کتاب‌ها
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+
+    post:
+      summary: افزودن کتاب جدید (Contribute) 🔐
+      tags: [Books]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+      responses:
+        '201':
+          description: کتاب با موفقیت اضافه شد.
+        '403':
+          description: دسترسی غیرمجاز.
+
+  /books/{bookId}:
+    parameters:
+      - in: path
+        name: bookId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: شناسه منحصر به فرد کتاب
+        
+    get:
+      summary: دریافت جزئیات کتاب (Book Preview)
+      tags: [Books]
+      responses:
+        '200':
+          description: اطلاعات کتاب بازیابی شد.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          description: کتاب پیدا نشد.
+
+    put:
+      summary: ویرایش اطلاعات کتاب
+      tags: [Books]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+      responses:
+        '200':
+          description: اطلاعات کتاب ویرایش شد.
+
+    delete:
+      summary: حذف کتاب
+      tags: [Books]
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: کتاب با موفقیت حذف شد.
+
+  /books/{bookId}/content:
+    parameters:
+      - in: path
+        name: bookId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: دریافت آدرس‌های محتوای E-book و Audio (Read Now / Listen)
+      tags: [Content]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: جزئیات دسترسی به محتوا
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookContent'
+        '403':
+          description: کاربر این کتاب را امانت نگرفته است.
+
+  /books/{bookId}/notes:
+    parameters:
+      - in: path
+        name: bookId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: دریافت لیست یادداشت‌های کاربر برای این کتاب
+      tags: [Content]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: لیست یادداشت‌ها
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Note'
+    post:
+      summary: ذخیره یادداشت جدید
+      tags: [Content]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                page_number:
+                  type: integer
+                note_text:
+                  type: string
+              required: [user_id, page_number, note_text]
+      responses:
+        '201':
+          description: یادداشت با موفقیت ذخیره شد.
+
+
+  /books/{bookId}/borrow:
+    parameters: # ✅ اصلاح شده برای رفع خطای Swagger
+      - in: path
+        name: bookId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: شناسه منحصر به فرد کتاب
+    post:
+      summary: امانت گرفتن کتاب (Borrow)
+      tags: [Borrow]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, book_serial_number] # شماره سریال برای امانت فیزیکی الزامی است
+              properties:
+                user_id:
+                  type: string
+                  format: uuid
+                  description: شناسه کاربر امانت گیرنده
+                book_serial_number:
+                  type: string
+                  description: شماره سریال نسخه فیزیکی کتاب.
+                due_date:
+                  type: string
+                  format: date
+                  description: تاریخ بازگشت مورد انتظار (اختیاری)
+                purpose:
+                  type: string
+                  description: هدف امانت گرفتن کتاب (اختیاری)
+      responses:
+        '201':
+          description: کتاب با موفقیت امانت گرفته شد.
+        '400':
+          description: کتاب موجود نیست یا کاربر محدودیت دارد.
+
+  /books/{bookId}/return:
+    parameters: # ✅ اصلاح شده برای رفع خطای Swagger
+      - in: path
+        name: bookId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: شناسه منحصر به فرد کتاب
+    post:
+      summary: بازگرداندن کتاب (My Shelf Return)
+      tags: [Borrow]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, book_serial_number]
+              properties:
+                user_id:
+                  type: string
+                  format: uuid
+                  description: شناسه کاربر
+                book_serial_number:
+                  type: string
+                  description: شماره سریال کتاب بازگردانده شده.
+                fine_paid: # برای پرداخت جریمه در صورت وجود
+                  type: boolean
+                  description: آیا جریمه (در صورت وجود) پرداخت شده است؟
+      responses:
+        '200':
+          description: کتاب با موفقیت بازگردانده شد.
+        '400':
+          description: خطای بازگشت.
+
+  # ----------------------------------------------------
+  # CONTRIBUTE PATHS
+  # ----------------------------------------------------
+  /contribute:
+    post:
+      summary: ارسال کتاب یا محتوای پیشنهادی جدید برای بررسی
+      tags: [Contribute]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                author:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+              required: [title, author, file]
+      responses:
+        '202':
+          description: مشارکت با موفقیت ارسال و در صف بررسی قرار گرفت.
+
+  /contribute/submissions:
+    get:
+      summary: دریافت لیست مشارکت‌های ارسالی کاربر
+      tags: [Contribute]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: لیست مشارکت‌ها
           content:
             application/json:
               schema:
@@ -218,237 +605,290 @@ paths:
                 items:
                   type: object
                   properties:
-                    id:
+                    submission_id:
                       type: string
-                    title:
+                    status:
                       type: string
-                    author:
-                      type: string
-                    available:
-                      type: boolean
-              example:
-                - id: "b1"
-                  title: "کتاب ریاضی"
-                  author: "محمد"
-                  available: true
-                - id: "b2"
-                  title: "کتاب فیزیک"
-                  author: "زهرا"
-                  available: false
-                - id: "b3"
-                  title: "کتاب شیمی"
-                  author: "سارا"
-                  available: true
-                - id: "b4"
-                  title: "داستان کوتاه"
-                  author: "رضا"
-                  available: true
-                - id: "b5"
-                  title: "تاریخ ایران"
-                  author: "فاطمه"
-                  available: false
-                - id: "b6"
-                  title: "برنامه‌نویسی جاوااسکریپت"
-                  author: "امیر"
-                  available: true
-                - id: "b7"
-                  title: "اقتصاد کلان"
-                  author: "حسن"
-                  available: true
-                - id: "b8"
-                  title: "زبان انگلیسی سطح یک"
-                  author: "لیلا"
-                  available: false
-                - id: "b9"
-                  title: "فلسفه معاصر"
-                  author: "نرگس"
-                  available: true
-                - id: "b10"
-                  title: "هنر و طراحی"
-                  author: "مهدی"
-                  available: true
+                      enum: [Pending, Approved, Rejected]
 
-    post:
-      summary: اضافه کردن کتاب جدید
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                author:
-                  type: string
-              example:
-                title: "کتاب جدید تست"
-                author: "نویسنده تست"
-      responses:
-        '201':
-          description: کتاب اضافه شد
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  title:
-                    type: string
-                  author:
-                    type: string
-                  available:
-                    type: boolean
-              example:
-                id: "b11"
-                title: "کتاب جدید تست"
-                author: "نویسنده تست"
-                available: true
-
-  /books/{bookId}:
-    put:
-      summary: ویرایش اطلاعات کتاب
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: bookId
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                author:
-                  type: string
-              example:
-                title: "کتاب ریاضی پیشرفته"
-                author: "محمد جدید"
-      responses:
-        '200':
-          description: اطلاعات کتاب ویرایش شد
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  title:
-                    type: string
-                  author:
-                    type: string
-                  available:
-                    type: boolean
-              example:
-                id: "b1"
-                title: "کتاب ریاضی پیشرفته"
-                author: "محمد جدید"
-                available: true
-
-    delete:
-      summary: حذف کتاب
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: bookId
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: کتاب حذف شد
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-              example:
-                message: "کتاب با موفقیت حذف شد"
-
-  /books/{bookId}/borrow:
-    post:
-      summary: قرض گرفتن کتاب
-      parameters:
-        - in: path
-          name: bookId
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                userId:
-                  type: string
-              example:
-                userId: "1"
-      responses:
-        '200':
-          description: کتاب قرض گرفته شد
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-              example:
-                message: "کتاب با موفقیت قرض گرفته شد"
-        '400':
-          description: کتاب در دسترس نیست
-
-  /books/{bookId}/return:
-    post:
-      summary: پس دادن کتاب
-      parameters:
-        - in: path
-          name: bookId
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                userId:
-                  type: string
-              example:
-                userId: "1"
-      responses:
-        '200':
-          description: کتاب بازگشت داده شد
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-              example:
-                message: "کتاب با موفقیت بازگشت داده شد"
-        '400':
-          description: خطا در بازگشت کتاب
 
 components:
+  schemas:
+    # ----------------------------------------------------
+    # USER SCHEMAS (با فیلدهای Readings/Contribution/Phone Number)
+    # ----------------------------------------------------
+    User:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          description: شناسه منحصر به فرد کاربر
+        reg_number:
+          type: string
+          description: شماره ثبت کالج یا شناسه پرسنلی.
+        email:
+          type: string
+          format: email
+          description: ایمیل کالج یا سازمانی.
+        role:
+          type: string
+          enum: ["student", "staff"]
+          description: نقش کاربر در سیستم.
+        is_active:
+          type: boolean
+          description: وضعیت فعال بودن حساب کاربری.
+        readings_count:
+          type: integer
+          description: تعداد کل کتاب‌های خوانده شده توسط کاربر (از صفحه Account).
+        contribution_count:
+          type: integer
+          description: تعداد مشارکت‌های کاربر (از صفحه Account).
+        phone_number:
+          type: string
+          description: شماره تلفن کاربر (از صفحه Account).
+    
+    UserRegistration:
+      type: object
+      required: [reg_number, email, password, confirm_password]
+      properties:
+        reg_number:
+          type: string
+          description: شماره ثبت کالج یا شناسه پرسنلی.
+        email:
+          type: string
+          format: email
+          description: ایمیل کالج یا سازمانی.
+        password:
+          type: string
+          format: password
+          description: رمز عبور جدید.
+        confirm_password:
+          type: string
+          format: password
+          description: تکرار رمز عبور برای تایید.
+    
+    UserLogin:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      example:
+        email: "staff@test.com"
+        password: "testpass123"
+    
+    UserUpdate:
+      type: object
+      properties:
+        reg_number:
+          type: string
+          description: شماره ثبت کالج یا شناسه پرسنلی.
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    # ----------------------------------------------------
+    # BOOK SCHEMAS
+    # ----------------------------------------------------
+    Book:
+      type: object
+      properties:
+        book_id:
+          type: string
+          format: uuid
+          description: شناسه منحصر به فرد کتاب
+        title:
+          type: string
+          description: عنوان کتاب
+        author:
+          type: string
+          description: نام نویسنده
+        isbn:
+          type: string
+          description: کد استاندارد بین‌المللی کتاب
+        description:
+          type: string
+          description: خلاصه یا توضیحات کامل کتاب
+        language:
+          type: string
+          description: زبان اصلی کتاب
+        page_count:
+          type: integer
+          description: تعداد صفحات کتاب
+        categories:
+          type: array
+          items:
+            type: string
+          description: دسته‌های اصلی کتاب (مانند Engineering)
+        cover_url:
+          type: string
+          format: url
+          description: آدرس تصویر کاور کتاب
+        avg_rating:
+          type: number
+          format: float
+          description: میانگین امتیاز از 5
+        publication_year:
+          type: integer
+          description: سال انتشار
+        is_available:
+          type: boolean
+          description: موجود بودن برای امانت (فیزیکی یا الکترونیک)
+        stock_status:
+          type: string
+          enum: [In-Shelf, Borrowed, E-book-Only]
+          description: وضعیت موجودی کتاب در قفسه.
+
+    # ----------------------------------------------------
+    # SHELF/BORROW SCHEMAS
+    # ----------------------------------------------------
+    BorrowRecord:
+      type: object
+      description: رکورد مربوط به یک امانت فعال یا بازگردانده شده در قفسه کاربر.
+      properties:
+        shelf_id:
+          type: string
+          format: uuid
+          description: شناسه رکورد امانت
+        user_id:
+          type: string
+          format: uuid
+          description: شناسه کاربر
+        book_id:
+          type: string
+          format: uuid
+          description: شناسه کتاب
+        book_serial_number:
+          type: string
+          description: شماره سریال منحصر به فرد نسخه فیزیکی کتاب.
+        purpose:
+          type: string
+          description: هدف یا شرح امانت گرفتن کتاب.
+        borrow_date:
+          type: string
+          format: date
+          description: تاریخ شروع امانت
+        due_date:
+          type: string
+          format: date
+          description: تاریخ مورد انتظار برای بازگشت
+        is_returned:
+          type: boolean
+          description: آیا کتاب بازگردانده شده است؟
+        last_read_page:
+          type: integer
+          description: شماره آخرین صفحه مطالعه شده
+          
+    # ----------------------------------------------------
+    # PAYMENT SCHEMAS
+    # ----------------------------------------------------
+    Payment:
+      type: object
+      description: رکورد مربوط به تاریخچه پرداخت‌های کاربر، شامل جریمه‌ها.
+      properties:
+        payment_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        book_title:
+          type: string
+          description: عنوان کتاب مرتبط با جریمه.
+        book_format:
+          type: string
+          enum: [Hard Copy, E-Book, Audio book]
+          description: فرمت کتاب مرتبط با جریمه.
+        usage_days:
+          type: string
+          description: مدت استفاده یا دلیل جریمه (مثلاً 3 Days overdue).
+        penalty_amount:
+          type: number
+          format: float
+          description: مبلغ جریمه (مثلاً ₹100).
+        currency:
+          type: string
+          example: "IRR"
+        payment_status:
+          type: string
+          enum: [Pending, Success, Failed, Cancelled]
+        reason:
+          type: string
+          description: دلیل پرداخت (مثلاً Fine, Subscription)
+        payment_date:
+          type: string
+          format: date
+          
+    # ----------------------------------------------------
+    # CONTENT SCHEMAS
+    # ----------------------------------------------------
+    BookContent:
+      type: object
+      description: جزئیات دسترسی به محتوای دیجیتال کتاب.
+      properties:
+        book_id:
+          type: string
+          format: uuid
+        e_book_url:
+          type: string
+          format: url
+          description: لینک یا آدرس سرویس نمایش کتاب الکترونیک (برای Read Now)
+        audio_book_url:
+          type: string
+          format: url
+          description: لینک یا آدرس فایل صوتی (برای Listen)
+        hard_copy_available:
+          type: boolean
+          description: آیا نسخه فیزیکی هم موجود است.
+    
+    Note:
+      type: object
+      description: یک یادداشت ایجاد شده توسط کاربر در یک صفحه خاص.
+      properties:
+        note_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        book_id:
+          type: string
+          format: uuid
+        page_number:
+          type: integer
+        note_text:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          
+    # ----------------------------------------------------
+    # NEW HOME SCHEMAS
+    # ----------------------------------------------------
+    NewsSource:
+      type: object
+      description: اطلاعات مربوط به منبع خبری در صفحه اصلی.
+      properties:
+        name:
+          type: string
+          description: نام روزنامه/منبع (مثلاً The Hindu).
+        logo_url:
+          type: string
+          format: url
+          description: آدرس لوگوی منبع.
+        link_url:
+          type: string
+          format: url
+          description: لینک برای هدایت کاربر به اخبار منبع.
+
   securitySchemes:
     BearerAuth:
       type: http
