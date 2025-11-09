@@ -84,10 +84,13 @@ paths:
               schema:
                 type: object
                 properties:
-                  token:
+                  token: # ✅ اصلاح شده: توکن احراز هویت
                     type: string
-                  user_id:
+                    description: JWT token for secure API access
+                  user_id: # ✅ اصلاح شده: شناسه کاربر
                     type: string
+                    format: uuid
+                    description: The ID of the logged-in user
         '401':
           description: نام کاربری یا رمز عبور اشتباه.
 
@@ -482,7 +485,7 @@ paths:
 
 
   /books/{bookId}/borrow:
-    parameters: # ✅ اصلاح شده برای رفع خطای Swagger
+    parameters:
       - in: path
         name: bookId
         required: true
@@ -524,7 +527,7 @@ paths:
           description: کتاب موجود نیست یا کاربر محدودیت دارد.
 
   /books/{bookId}/return:
-    parameters: # ✅ اصلاح شده برای رفع خطای Swagger
+    parameters:
       - in: path
         name: bookId
         required: true
